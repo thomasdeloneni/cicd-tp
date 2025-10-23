@@ -4,7 +4,6 @@ module.exports = {
     node: true,
     jest: true,
   },
-  files: ["**/*.js"],
   plugins: ["@eslint/js"],
   extends: ["@eslint/js/recommended"],
   rules: {
