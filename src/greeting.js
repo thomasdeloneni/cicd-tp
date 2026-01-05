@@ -14,6 +14,7 @@
  * getGreeting('Alice');
  */
 function getGreeting(name) {
+  // update test
   const greeting = `Hello world!`;
 
   if (name) {
