@@ -15,7 +15,7 @@
  */
 function getGreeting(name) {
   // update test
-  const greeting = `Hello world!`;
+  const greeting = 'Hello world!';
 
   if (name) {
     const wisher = `From ${name}`;

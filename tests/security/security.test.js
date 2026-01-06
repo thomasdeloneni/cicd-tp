@@ -4,7 +4,7 @@ const app = require('../../src/server');
 describe('Security Tests', () => {
   describe('Input Validation', () => {
     it('should handle SQL injection attempts', async () => {
-      const maliciousInput = "'; DROP TABLE users; --";
+      const maliciousInput = '\'; DROP TABLE users; --';
       const response = await request(app)
         .get('/')
         .query({ name: maliciousInput });

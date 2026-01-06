@@ -14,9 +14,15 @@
     "test:e2e": "jest tests/e2e",
     "test:security": "jest tests/security",
     "test:performance": "jest tests/performance",
-    "test:all": "jest tests/unit tests/integration tests/e2e tests/security tests/performance"
+    "test:all": "jest tests/unit tests/integration tests/e2e tests/security tests/performance",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
   },
-  "keywords": ["greeting", "nodejs", "express"],
+  "keywords": [
+    "greeting",
+    "nodejs",
+    "express"
+  ],
   "author": "Your Name",
   "license": "MIT",
   "dependencies": {
@@ -36,7 +42,11 @@
       "!src/server.js"
     ],
     "coverageDirectory": "coverage",
-    "coverageReporters": ["text", "lcov", "html"],
+    "coverageReporters": [
+      "text",
+      "lcov",
+      "html"
+    ],
     "testMatch": [
       "**/tests/**/*.test.js"
     ]
