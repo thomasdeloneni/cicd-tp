@@ -1,7 +1,13 @@
-const { getGreeting } = require("../../src/greeting");
+const { getGreeting } = require('../../src/greeting');
 
-describe("getGreeting", () => {
-  it("returns the hello world message", () => {
-    expect(getGreeting()).toBe("Hello world!");
+describe('getGreeting', () => {
+  it('should return a greeting', () => {
+    const greeting = getGreeting();
+    expect(greeting).toBe('Hello world!');
+  });
+
+  it('should return a greeting with name', () => {
+    const greeting = getGreeting('John');
+    expect(greeting).toBe('Hello world! From John');
   });
 });
