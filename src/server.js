@@ -9,6 +9,7 @@
  */
 
 const express = require("express");
+const helmet = require("helmet");
 const { getGreeting } = require("./greeting");
 
 /**
@@ -42,6 +43,18 @@ const PORT = process.env.PORT || 3000;
  * // GET /hello/Alice
  * // Response: "Hello world! From Alice"
  */
+// Middleware de sécurité
+app.use(helmet({
+  contentSecurityPolicy: false, // Désactivé pour simplifier les tests
+  crossOriginEmbedderPolicy: false
+}));
+
+// Route principale
+app.get("/", (req, res) => {
+  res.send(getGreeting());
+});
+
+// Routes hello existantes
 app.get("/hello/:name?", (req, res) => {
   const name = req.params.name;
   res.send(getGreeting(name));
