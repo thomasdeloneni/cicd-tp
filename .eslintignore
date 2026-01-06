@@ -6,3 +6,7 @@ dist/
 
 # test coverage output:
 coverage/
+.nyc_output/
+
+# test files
+tests/
