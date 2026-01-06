@@ -17,7 +17,8 @@ function getGreeting(name) {
   // update test
   const greeting = 'Hello world!';
 
-  if (name) {
+  // Convertir name en string si ce n'est pas déjà une string, null ou undefined
+  if (name !== null && name !== undefined && name !== '') {
     const wisher = `From ${name}`;
 
     return `${greeting} ${wisher}`;
