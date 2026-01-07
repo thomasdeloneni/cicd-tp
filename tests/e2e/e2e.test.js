@@ -3,6 +3,7 @@ const app = require("../../src/server");
 let server;
 let baseURL;
 
+//before all execution
 beforeAll((done) => {
   server = app.listen(0, () => {
     const { port } = server.address();
