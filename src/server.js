@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 /**
  * Express server providing greeting endpoints.
  *
@@ -12,11 +11,6 @@
 const express = require("express");
 const helmet = require("helmet");
 const { getGreeting } = require("./greeting");
-=======
-const express = require('express');
-const helmet = require('helmet');
-const { getGreeting } = require('./greeting');
->>>>>>> 3c5d15a (finx-lint)
 
 /**
  * Express application instance.
