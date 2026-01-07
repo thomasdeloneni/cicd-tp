@@ -24,6 +24,9 @@ jobs:
   test:
     needs: pr_check
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: read
     steps:
       - uses: actions/checkout@v4
 
@@ -31,11 +34,99 @@ jobs:
         with:
           node-version-file: ".nvmrc"
       - run: npm ci
-      - run: npm test
+
+      - name: Run tests
+        id: test
+        run: npm test
+        continue-on-error: true
 
       - name: Generate Allure Report
         if: always()
         run: npx allure generate allure-results -o allure-report --clean
+
+      - name: Extract test summary
+        if: always()
+        id: test-summary
+        run: |
+          if [ -f allure-report/widgets/summary.json ]; then
+            echo "summary<<EOF" >> $GITHUB_OUTPUT
+            cat allure-report/widgets/summary.json >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          else
+            echo "summary={}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Comment PR with test results
+        if: always() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const summaryPath = 'allure-report/widgets/summary.json';
+
+            let summary = { statistic: { total: 0, passed: 0, failed: 0, broken: 0, skipped: 0 } };
+            if (fs.existsSync(summaryPath)) {
+              summary = JSON.parse(fs.readFileSync(summaryPath, 'utf8'));
+            }
+
+            const stats = summary.statistic || {};
+            const total = stats.total || 0;
+            const passed = stats.passed || 0;
+            const failed = stats.failed || 0;
+            const broken = stats.broken || 0;
+            const skipped = stats.skipped || 0;
+
+            const passRate = total > 0 ? ((passed / total) * 100).toFixed(2) : 0;
+            const testStatus = failed === 0 && broken === 0 ? '✅ PASSED' : '❌ FAILED';
+
+            const commentBody = `## ${testStatus} Test Results
+
+            **Commit:** ${context.sha.substring(0, 7)}
+            **Branch:** ${context.payload.pull_request.head.ref}
+
+            ### Summary
+            | Status | Count |
+            |--------|-------|
+            | ✅ Passed | ${passed} |
+            | ❌ Failed | ${failed} |
+            | 💔 Broken | ${broken} |
+            | ⏭️ Skipped | ${skipped} |
+            | **📊 Total** | **${total}** |
+
+            **Pass Rate:** ${passRate}%
+
+            ---
+            *Updated at: ${new Date().toUTCString()}*
+            *[View Allure Report](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})*`;
+
+            // Find existing comment
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+            });
+
+            const botComment = comments.find(comment =>
+              comment.user.type === 'Bot' &&
+              comment.body.includes('Test Results')
+            );
+
+            // Update or create comment
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: commentBody
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.pull_request.number,
+                body: commentBody
+              });
+            }
 
       - name: Upload Allure Report
         if: always()
@@ -52,5 +143,9 @@ jobs:
           name: allure-results
           path: allure-results
           retention-days: 30
+
+      - name: Fail if tests failed
+        if: steps.test.outcome == 'failure'
+        run: exit 1
 
 
