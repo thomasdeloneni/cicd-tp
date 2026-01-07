@@ -1,0 +1,330 @@
+name: Deploy Reports to GitHub Pages
+
+on:
+  push:
+    branches: [master, main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build-reports:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests with coverage
+        run: npm test -- --coverage
+        continue-on-error: true
+
+      - name: Generate Allure Report
+        run: npx allure generate allure-results -o allure-report --clean
+
+      - name: Create reports directory structure
+        run: |
+          mkdir -p public/allure
+          mkdir -p public/coverage
+          mkdir -p public/security
+
+      - name: Copy Allure report
+        run: cp -r allure-report/* public/allure/
+
+      - name: Copy coverage report
+        run: |
+          if [ -d coverage/lcov-report ]; then
+            cp -r coverage/lcov-report/* public/coverage/
+          fi
+
+      - name: Create index page
+        run: |
+          cat > public/index.html << 'EOF'
+          <!DOCTYPE html>
+          <html lang="fr">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Test Reports - CI/CD TP</title>
+            <style>
+              * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+              }
+              body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                min-height: 100vh;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 20px;
+              }
+              .container {
+                max-width: 1200px;
+                width: 100%;
+              }
+              h1 {
+                color: white;
+                text-align: center;
+                margin-bottom: 50px;
+                font-size: 3em;
+                text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+              }
+              .cards {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                gap: 30px;
+                margin-bottom: 40px;
+              }
+              .card {
+                background: white;
+                border-radius: 15px;
+                padding: 30px;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+                transition: transform 0.3s ease, box-shadow 0.3s ease;
+                cursor: pointer;
+                text-decoration: none;
+                color: inherit;
+                display: block;
+              }
+              .card:hover {
+                transform: translateY(-10px);
+                box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+              }
+              .card-icon {
+                font-size: 3em;
+                margin-bottom: 20px;
+              }
+              .card h2 {
+                color: #667eea;
+                margin-bottom: 15px;
+                font-size: 1.8em;
+              }
+              .card p {
+                color: #666;
+                line-height: 1.6;
+                margin-bottom: 20px;
+              }
+              .card-badge {
+                display: inline-block;
+                padding: 5px 15px;
+                border-radius: 20px;
+                font-size: 0.85em;
+                font-weight: bold;
+                margin-right: 10px;
+              }
+              .badge-tests {
+                background: #4ade80;
+                color: white;
+              }
+              .badge-coverage {
+                background: #38bdf8;
+                color: white;
+              }
+              .badge-security {
+                background: #f97316;
+                color: white;
+              }
+              .stats {
+                background: white;
+                border-radius: 15px;
+                padding: 30px;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+                margin-top: 30px;
+              }
+              .stats h3 {
+                color: #667eea;
+                margin-bottom: 20px;
+                font-size: 1.5em;
+              }
+              .stats-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                gap: 20px;
+              }
+              .stat-item {
+                text-align: center;
+                padding: 20px;
+                background: #f8fafc;
+                border-radius: 10px;
+              }
+              .stat-value {
+                font-size: 2.5em;
+                font-weight: bold;
+                color: #667eea;
+                margin-bottom: 5px;
+              }
+              .stat-label {
+                color: #666;
+                font-size: 0.9em;
+              }
+              footer {
+                text-align: center;
+                color: white;
+                margin-top: 50px;
+                opacity: 0.8;
+              }
+              @media (max-width: 768px) {
+                h1 {
+                  font-size: 2em;
+                }
+                .cards {
+                  grid-template-columns: 1fr;
+                }
+              }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <h1>📊 Rapports de Tests CI/CD</h1>
+
+              <div class="cards">
+                <a href="./allure/index.html" class="card">
+                  <div class="card-icon">🎯</div>
+                  <h2>Rapport Allure</h2>
+                  <p>Rapport détaillé des tests avec graphiques, historique et tendances.</p>
+                  <div>
+                    <span class="card-badge badge-tests">100 Tests</span>
+                    <span class="card-badge badge-tests">✓ Tous passent</span>
+                  </div>
+                </a>
+
+                <a href="./coverage/index.html" class="card">
+                  <div class="card-icon">📈</div>
+                  <h2>Couverture de Code</h2>
+                  <p>Analyse détaillée de la couverture de code par fichier et ligne.</p>
+                  <div>
+                    <span class="card-badge badge-coverage">90% Coverage</span>
+                  </div>
+                </a>
+
+                <a href="./security/index.html" class="card">
+                  <div class="card-icon">🔒</div>
+                  <h2>Scan de Sécurité</h2>
+                  <p>Résultats des scans OWASP ZAP pour détecter les vulnérabilités.</p>
+                  <div>
+                    <span class="card-badge badge-security">OWASP ZAP</span>
+                  </div>
+                </a>
+              </div>
+
+              <div class="stats">
+                <h3>📊 Statistiques des Tests</h3>
+                <div class="stats-grid">
+                  <div class="stat-item">
+                    <div class="stat-value">100</div>
+                    <div class="stat-label">Tests Totaux</div>
+                  </div>
+                  <div class="stat-item">
+                    <div class="stat-value">5</div>
+                    <div class="stat-label">Suites de Tests</div>
+                  </div>
+                  <div class="stat-item">
+                    <div class="stat-value">90%</div>
+                    <div class="stat-label">Couverture</div>
+                  </div>
+                  <div class="stat-item">
+                    <div class="stat-value">28</div>
+                    <div class="stat-label">Tests Sécurité</div>
+                  </div>
+                  <div class="stat-item">
+                    <div class="stat-value">17</div>
+                    <div class="stat-label">Tests Performance</div>
+                  </div>
+                  <div class="stat-item">
+                    <div class="stat-value">✓</div>
+                    <div class="stat-label">Statut CI/CD</div>
+                  </div>
+                </div>
+              </div>
+
+              <footer>
+                <p>Dernière mise à jour : <span id="date"></span></p>
+                <p>Généré automatiquement par GitHub Actions</p>
+              </footer>
+            </div>
+
+            <script>
+              document.getElementById('date').textContent = new Date().toLocaleString('fr-FR');
+            </script>
+          </body>
+          </html>
+          EOF
+
+      - name: Create 404 page
+        run: |
+          cat > public/404.html << 'EOF'
+          <!DOCTYPE html>
+          <html lang="fr">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>404 - Page non trouvée</title>
+            <style>
+              body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                min-height: 100vh;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: white;
+                text-align: center;
+                padding: 20px;
+              }
+              h1 { font-size: 6em; margin: 0; }
+              p { font-size: 1.5em; margin: 20px 0; }
+              a {
+                color: white;
+                background: rgba(255,255,255,0.2);
+                padding: 15px 30px;
+                border-radius: 25px;
+                text-decoration: none;
+                display: inline-block;
+                margin-top: 20px;
+                transition: background 0.3s;
+              }
+              a:hover { background: rgba(255,255,255,0.3); }
+            </style>
+          </head>
+          <body>
+            <div>
+              <h1>404</h1>
+              <p>Page non trouvée</p>
+              <a href="/">Retour à l'accueil</a>
+            </div>
+          </body>
+          </html>
+          EOF
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./public
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build-reports
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

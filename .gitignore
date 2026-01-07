@@ -2,3 +2,11 @@ allure-results/
 allure-report/
 node_modules/
 .aider.*
+coverage/
+.claude
+
+# OWASP ZAP Reports
+report_html.html
+report_json.json
+report_md.md
+*.har
