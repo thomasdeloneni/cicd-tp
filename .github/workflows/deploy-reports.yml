@@ -40,7 +40,6 @@ jobs:
         run: |
           mkdir -p public/allure
           mkdir -p public/coverage
-          mkdir -p public/security
 
       - name: Copy Allure report
         run: cp -r allure-report/* public/allure/
@@ -213,15 +212,6 @@ jobs:
                     <span class="card-badge badge-coverage">90% Coverage</span>
                   </div>
                 </a>
-
-                <a href="./security/index.html" class="card">
-                  <div class="card-icon">🔒</div>
-                  <h2>Scan de Sécurité</h2>
-                  <p>Résultats des scans OWASP ZAP pour détecter les vulnérabilités.</p>
-                  <div>
-                    <span class="card-badge badge-security">OWASP ZAP</span>
-                  </div>
-                </a>
               </div>
 
               <div class="stats">
@@ -240,16 +230,24 @@ jobs:
                     <div class="stat-label">Couverture</div>
                   </div>
                   <div class="stat-item">
+                    <div class="stat-value">21</div>
+                    <div class="stat-label">Tests Unitaires</div>
+                  </div>
+                  <div class="stat-item">
+                    <div class="stat-value">24</div>
+                    <div class="stat-label">Tests Intégration</div>
+                  </div>
+                  <div class="stat-item">
+                    <div class="stat-value">17</div>
+                    <div class="stat-label">Tests E2E</div>
+                  </div>
+                  <div class="stat-item">
                     <div class="stat-value">28</div>
                     <div class="stat-label">Tests Sécurité</div>
                   </div>
                   <div class="stat-item">
                     <div class="stat-value">17</div>
                     <div class="stat-label">Tests Performance</div>
-                  </div>
-                  <div class="stat-item">
-                    <div class="stat-value">✓</div>
-                    <div class="stat-label">Statut CI/CD</div>
                   </div>
                 </div>
               </div>
