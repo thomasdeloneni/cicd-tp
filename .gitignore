@@ -2,3 +2,5 @@ allure-results/
 allure-report/
 node_modules/
 .aider.*
+coverage/
+.claude
